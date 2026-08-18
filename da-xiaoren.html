@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>打小人 · 解气一下</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f0e2bd;
+    --paper-dark:#e1cf9d;
+    --paper-edge:#cbb480;
+    --ink:#2a1c12;
+    --ink-soft:#4a3626;
+    --red:#a8352a;
+    --red-deep:#7a2119;
+    --red-bright:#c94433;
+    --gold:#c79a2e;
+    --smoke:#cfc9bb;
+    --concrete-1:#2e2c2a;
+    --concrete-2:#1c1a19;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Noto Sans SC',sans-serif;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% 0%, #3a3733 0%, transparent 60%),
+      repeating-linear-gradient(180deg, var(--concrete-1) 0px, var(--concrete-1) 3px, var(--concrete-2) 3px, var(--concrete-2) 6px),
+      linear-gradient(180deg,#26241f 0%, #100f0e 100%);
+    min-height:100%;
+    color:var(--paper);
+    overflow-x:hidden;
+    display:flex;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+  }
+  .wrap{
+    width:100%;
+    max-width:480px;
+    padding:18px 14px 34px;
+    position:relative;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    text-align:center;
+    margin-bottom:6px;
+    position:relative;
+  }
+  h1{
+    font-family:'ZCOOL KuaiLe',cursive;
+    font-size:2.3rem;
+    letter-spacing:6px;
+    margin:4px 0 2px;
+    color:var(--red-bright);
+    text-shadow:0 0 1px var(--red-deep), 2px 2px 0 rgba(0,0,0,.5);
+  }
+  header p{
+    margin:0;
+    font-size:.78rem;
+    color:var(--smoke);
+    letter-spacing:2px;
+  }
+
+  /* hanging lanterns */
+  .lanterns{position:absolute; top:-14px; left:0; right:0; display:flex; justify-content:space-between; pointer-events:none; padding:0 6px;}
+  .lantern{width:26px;}
+  .lantern svg{width:100%; display:block; animation:sway 3.4s ease-in-out infinite;}
+  .lantern.r svg{animation-delay:.4s;}
+  @keyframes sway{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+
+  /* ---------- tally counter ---------- */
+  .counter-board{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:linear-gradient(180deg,#3a2a1c,#241812);
+    border:2px solid #5c4326;
+    border-radius:10px;
+    padding:8px 12px;
+    margin:14px 0 10px;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.5);
+  }
+  .counter-board .label{font-size:.72rem; color:var(--smoke); letter-spacing:2px;}
+  .tally{
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:1.5rem;
+    color:var(--red-bright);
+    letter-spacing:3px;
+    min-height:1.6rem;
+  }
+  .counter-board .num{
+    font-family:'ZCOOL KuaiLe',cursive;
+    font-size:1.1rem;
+    color:var(--gold);
+  }
+
+  /* ---------- stage ---------- */
+  .stage{
+    position:relative;
+    height:500px;
+    border-radius:16px;
+    background:
+      radial-gradient(ellipse 90% 50% at 50% 100%, rgba(0,0,0,.55), transparent 60%),
+      linear-gradient(180deg,#403a30 0%, #1c1916 100%);
+    border:1px solid #45403a;
+    overflow:hidden;
+    cursor:pointer;
+    touch-action:none;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  }
+  .stage.shake{animation:stageshake .35s;}
+  @keyframes stageshake{
+    0%,100%{transform:translate(0,0);}
+    20%{transform:translate(-6px,2px);}
+    40%{transform:translate(5px,-3px);}
+    60%{transform:translate(-4px,3px);}
+    80%{transform:translate(3px,-2px);}
+  }
+
+  /* string doll hangs from */
+  .string{
+    position:absolute; top:0; left:50%; width:2px; height:46px;
+    background:#8a7a5c; transform-origin:top center;
+  }
+
+  .doll-pivot{
+    position:absolute; top:44px; left:50%; transform:translateX(-50%);
+    transform-origin:top center;
+    animation:idlesway 3.2s ease-in-out infinite;
+  }
+  @keyframes idlesway{
+    0%,100%{transform:translateX(-50%) rotate(-2.5deg);}
+    50%{transform:translateX(-50%) rotate(2.5deg);}
+  }
+  .doll-pivot.hit{animation:none;}
+
+  .doll{
+    position:relative;
+    width:240px;
+    padding:190px 14px 20px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,.15), transparent 40%),
+      var(--paper);
+    clip-path:polygon(
+      2% 6%, 10% 2%, 20% 5%, 32% 1%, 46% 4%, 60% 0%, 74% 4%, 88% 1%, 98% 6%,
+      100% 20%, 97% 34%, 100% 48%, 96% 62%, 100% 76%, 97% 90%, 100% 98%,
+      88% 100%, 74% 97%, 60% 100%, 46% 96%, 32% 100%, 20% 97%, 10% 100%, 2% 96%,
+      0% 82%, 4% 68%, 0% 54%, 3% 40%, 0% 26%, 3% 14%
+    );
+    box-shadow:0 14px 26px rgba(0,0,0,.5);
+    transition:transform .08s;
+  }
+  .doll.squash{animation:squash .32s ease;}
+  @keyframes squash{
+    0%{transform:scale(1,1) rotate(0deg);}
+    25%{transform:scale(1.1,.85) rotate(-3deg);}
+    50%{transform:scale(.92,1.08) rotate(2deg);}
+    75%{transform:scale(1.04,.96) rotate(-1deg);}
+    100%{transform:scale(1,1) rotate(0deg);}
+  }
+
+  .doll-ink{position:absolute; inset:0; width:100%; height:100%;}
+
+  .doll-title{
+    position:absolute; top:190px; left:50%; transform:translateX(-50%);
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:1.05rem; color:var(--red-deep); letter-spacing:3px;
+    white-space:nowrap;
+  }
+
+  .doll-head{
+    position:absolute; top:26px; left:50%; transform:translateX(-50%);
+    width:212px; height:158px; border-radius:6px;
+    border:3px solid var(--red-deep);
+    background:var(--paper-dark);
+    box-shadow:0 0 0 3px var(--paper), 0 4px 10px rgba(0,0,0,.35);
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .doll-head img{width:100%; height:100%; object-fit:contain; display:block;}
+  .doll-head svg{width:55%; height:55%;}
+
+  .pin{
+    position:absolute; top:18px; left:50%; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff2b0, var(--gold) 70%);
+    box-shadow:0 2px 3px rgba(0,0,0,.5);
+    z-index:3;
+  }
+
+  /* damage cracks overlay, grows with combo within a 50-hit cycle */
+  .cracks{position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity .25s;}
+  .cracks svg{width:100%; height:100%;}
+
+  /* stamp bursts */
+  .stamp{
+    position:absolute; font-family:'Ma Shan Zheng',cursive;
+    font-size:2.1rem; color:var(--red-bright);
+    pointer-events:none; transform:translate(-50%,-50%) rotate(-14deg) scale(.4);
+    opacity:0; z-index:5; text-shadow:0 0 3px rgba(0,0,0,.4);
+  }
+  @keyframes stampPop{
+    0%{opacity:0; transform:translate(-50%,-50%) rotate(-14deg) scale(.3);}
+    30%{opacity:1; transform:translate(-50%,-50%) rotate(-14deg) scale(1.15);}
+    45%{transform:translate(-50%,-50%) rotate(-14deg) scale(1);}
+    100%{opacity:0; transform:translate(-50%,-80%) rotate(-14deg) scale(1);}
+  }
+
+  .float-text{
+    position:absolute; font-family:'ZCOOL KuaiLe',cursive; font-size:.95rem;
+    color:#ffe9a8; text-shadow:0 1px 3px rgba(0,0,0,.6);
+    pointer-events:none; z-index:5; white-space:nowrap;
+  }
+  @keyframes floatUp{
+    0%{opacity:0; transform:translate(-50%,0);}
+    15%{opacity:1;}
+    100%{opacity:0; transform:translate(-50%,-52px);}
+  }
+
+  .spark{position:absolute; border-radius:50%; pointer-events:none; z-index:4;}
+
+  .scrap{position:absolute; pointer-events:none; z-index:4;}
+
+  /* slipper */
+  .slipper{
+    position:absolute; width:46px; z-index:6; pointer-events:none;
+    filter:drop-shadow(0 6px 6px rgba(0,0,0,.5));
+  }
+
+  /* incense */
+  .incense{
+    position:absolute; left:14px; bottom:10px; width:60px; height:90px;
+  }
+  .incense .pot{position:absolute; bottom:0; left:8px; width:44px; height:26px; background:linear-gradient(180deg,#6a4a2c,#3d2a17); border-radius:4px 4px 8px 8px; box-shadow:inset 0 -4px 6px rgba(0,0,0,.4);}
+  .stick{position:absolute; bottom:20px; width:2px; height:46px; background:#caa15a;}
+  .stick:nth-child(2){left:20px; transform:rotate(-4deg);}
+  .stick:nth-child(3){left:27px; transform:rotate(2deg); height:50px;}
+  .stick:nth-child(4){left:34px; transform:rotate(7deg);}
+  .ember{position:absolute; bottom:64px; width:5px; height:5px; border-radius:50%; background:#ff8a3d; box-shadow:0 0 6px 2px #ff8a3d;}
+  .ember:nth-child(2){left:19px;}
+  .ember:nth-child(3){left:26px; bottom:68px;}
+  .ember:nth-child(4){left:33px;}
+  .smoke-wisp{
+    position:absolute; bottom:66px; left:24px; width:8px; height:8px; border-radius:50%;
+    background:rgba(220,215,205,.35); filter:blur(3px);
+    animation:smokeRise 4s ease-in infinite;
+  }
+  .smoke-wisp:nth-child(6){animation-delay:1.3s; left:20px;}
+  .smoke-wisp:nth-child(7){animation-delay:2.6s; left:30px;}
+  @keyframes smokeRise{
+    0%{transform:translate(0,0) scale(1); opacity:0;}
+    15%{opacity:.5;}
+    100%{transform:translate(14px,-140px) scale(3.2); opacity:0;}
+  }
+
+  /* milestone overlay */
+  .milestone{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    pointer-events:none; opacity:0; z-index:8;
+  }
+  .milestone span{
+    font-family:'ZCOOL KuaiLe',cursive; font-size:1.6rem; color:#fff2c4;
+    background:rgba(122,33,25,.88); padding:14px 20px; border-radius:10px;
+    border:2px solid var(--gold); text-align:center; line-height:1.5;
+    box-shadow:0 8px 20px rgba(0,0,0,.5);
+  }
+  .milestone.show{animation:milestonePop 1.6s ease forwards;}
+  @keyframes milestonePop{
+    0%{opacity:0; transform:scale(.6);}
+    15%{opacity:1; transform:scale(1.05);}
+    25%{transform:scale(1);}
+    80%{opacity:1;}
+    100%{opacity:0;}
+  }
+
+  /* ---------- controls ---------- */
+  .controls{
+    display:flex; gap:10px; margin-top:14px;
+  }
+  .btn{
+    flex:1;
+    font-family:'ZCOOL KuaiLe',cursive;
+    font-size:.95rem;
+    letter-spacing:2px;
+    padding:11px 8px;
+    border-radius:9px;
+    border:1px solid var(--gold);
+    background:linear-gradient(180deg,#3a2a1c,#241812);
+    color:#ffe9a8;
+    cursor:pointer;
+    text-align:center;
+    box-shadow:0 3px 0 #17110c, 0 6px 10px rgba(0,0,0,.4);
+    transition:transform .08s;
+  }
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #17110c;}
+  .btn.primary{background:linear-gradient(180deg,var(--red-bright),var(--red-deep)); border-color:var(--red-deep); color:#fff4e0;}
+  #fileInput{display:none;}
+
+  footer{
+    text-align:center; margin-top:16px; font-size:.68rem; color:#8a8579; letter-spacing:1px; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="lanterns">
+    <div class="lantern l"><svg viewBox="0 0 40 60"><rect x="18" y="0" width="4" height="8" fill="#8a7a5c"/><ellipse cx="20" cy="30" rx="16" ry="22" fill="#a8352a" stroke="#7a2119" stroke-width="2"/><rect x="4" y="27" width="32" height="6" fill="#c79a2e" opacity=".6"/><rect x="16" y="52" width="8" height="8" fill="#c79a2e"/></svg></div>
+    <div class="lantern r"><svg viewBox="0 0 40 60"><rect x="18" y="0" width="4" height="8" fill="#8a7a5c"/><ellipse cx="20" cy="30" rx="16" ry="22" fill="#a8352a" stroke="#7a2119" stroke-width="2"/><rect x="4" y="27" width="32" height="6" fill="#c79a2e" opacity=".6"/><rect x="16" y="52" width="8" height="8" fill="#c79a2e"/></svg></div>
+  </div>
+
+  <header>
+    <h1>打 小 人</h1>
+    <p>桥底解气祈福 · 纯属娱乐</p>
+  </header>
+
+  <div class="counter-board">
+    <div>
+      <div class="label">今日战绩</div>
+      <div class="tally" id="tally">　</div>
+    </div>
+    <div class="num" id="numLabel">已打 0 下</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="incense">
+      <div class="pot"></div>
+      <div class="stick"></div><div class="stick"></div><div class="stick"></div>
+      <div class="ember"></div><div class="ember"></div><div class="ember"></div>
+      <div class="smoke-wisp"></div><div class="smoke-wisp"></div><div class="smoke-wisp"></div>
+    </div>
+
+    <div class="string"></div>
+    <div class="doll-pivot" id="dollPivot">
+      <div class="pin"></div>
+      <div class="doll" id="doll">
+        <svg class="doll-ink" viewBox="0 0 190 260" preserveAspectRatio="none">
+          <!-- body sketch -->
+          <path d="M95 105 C70 108 58 130 55 160 C52 190 60 220 60 240" stroke="#7a2119" stroke-width="3" fill="none" stroke-linecap="round" opacity=".65"/>
+          <path d="M95 105 C120 108 132 130 135 160 C138 190 130 220 130 240" stroke="#7a2119" stroke-width="3" fill="none" stroke-linecap="round" opacity=".65"/>
+          <path d="M78 118 L38 100" stroke="#7a2119" stroke-width="3" fill="none" stroke-linecap="round" opacity=".65"/>
+          <path d="M112 118 L152 100" stroke="#7a2119" stroke-width="3" fill="none" stroke-linecap="round" opacity=".65"/>
+          <path d="M95 105 L95 165" stroke="#7a2119" stroke-width="2" fill="none" opacity=".4" stroke-dasharray="2 4"/>
+          <text x="30" y="205" font-family="Ma Shan Zheng, cursive" font-size="30" fill="#a8352a" opacity=".16" transform="rotate(-8 30 205)">打</text>
+          <text x="105" y="230" font-family="Ma Shan Zheng, cursive" font-size="30" fill="#a8352a" opacity=".16" transform="rotate(7 105 230)">运</text>
+        </svg>
+        <div class="doll-title">仇人姓名：＿＿＿</div>
+        <div class="doll-head" id="dollHead">
+          <svg viewBox="0 0 100 100"><circle cx="35" cy="45" r="6" fill="#2a1c12"/><circle cx="65" cy="45" r="6" fill="#2a1c12"/><path d="M30 68 Q50 58 70 68" stroke="#2a1c12" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M22 30 Q35 20 46 28" stroke="#2a1c12" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M78 30 Q65 20 54 28" stroke="#2a1c12" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="cracks" id="cracks">
+          <svg viewBox="0 0 190 260" preserveAspectRatio="none">
+            <path d="M95 30 L80 70 L92 90 L70 130 L84 150 L60 200" stroke="#2a1c12" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M95 30 L112 65 L100 85 L120 120 L104 145 L128 190" stroke="#2a1c12" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="milestone" id="milestone"><span id="milestoneText"></span></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="uploadBtn">📷 换个仇人</button>
+    <button class="btn" id="resetBtn">🔄 重新计数</button>
+  </div>
+  <input type="file" id="fileInput" accept="image/*">
+
+  <footer>点击 / 点触纸人即可开打，越打越顺气～<br>手工纸偶，无法伤害任何真人，请放心发泄。</footer>
+</div>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+  const doll = document.getElementById('doll');
+  const dollPivot = document.getElementById('dollPivot');
+  const dollHead = document.getElementById('dollHead');
+  const cracks = document.getElementById('cracks');
+  const tallyEl = document.getElementById('tally');
+  const numLabel = document.getElementById('numLabel');
+  const milestone = document.getElementById('milestone');
+  const milestoneText = document.getElementById('milestoneText');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fileInput = document.getElementById('fileInput');
+
+  let count = 0;
+  let cycleCount = 0; // resets every 50 for crack progression
+  let audioCtx = null;
+
+  const phrases = [
+    "小人闪开!","啪!!","霉运 -1","好运 +1","退散退散","消气咗~",
+    "唔准搞我!","打到你怕!","顺风顺水","诸事大吉","финиш打!","通体舒畅"
+  ];
+
+  function ensureAudio(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playWhack(){
+    ensureAudio();
+    const t = audioCtx.currentTime;
+    // noise burst
+    const bufferSize = audioCtx.sampleRate * 0.12;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2);
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 900;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(.9, t);
+    gain.gain.exponentialRampToValueAtTime(.01, t + 0.14);
+    noise.connect(filter).connect(gain).connect(audioCtx.destination);
+    noise.start(t); noise.stop(t + 0.15);
+
+    // low thud
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.exponentialRampToValueAtTime(50, t + 0.12);
+    const oGain = audioCtx.createGain();
+    oGain.gain.setValueAtTime(.7, t);
+    oGain.gain.exponentialRampToValueAtTime(.01, t + 0.18);
+    osc.connect(oGain).connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 0.2);
+  }
+
+  function playChime(){
+    ensureAudio();
+    const notes = [523.25, 659.25, 784.0, 1046.5];
+    notes.forEach((f,i)=>{
+      const t = audioCtx.currentTime + i*0.09;
+      const osc = audioCtx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = f;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(.001, t);
+      g.gain.exponentialRampToValueAtTime(.25, t+0.02);
+      g.gain.exponentialRampToValueAtTime(.001, t+0.5);
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(t); osc.stop(t+0.55);
+    });
+  }
+
+  function updateTally(){
+    // 正-character tally: each char = 5 hits
+    const full = Math.floor(cycleCount/5);
+    const rem = cycleCount % 5;
+    let str = '正'.repeat(full);
+    const strokes = ['一','丅','下','正']; // partial progressions approx
+    // simple partial glyphs for remainder (approx strokes of 正)
+    const partials = ['','一','丅','下','正'];
+    str = '正'.repeat(full) + (rem>0 ? partials[rem].replace('正','') : '');
+    if(full===0 && rem===0) str = '　';
+    tallyEl.textContent = str || '　';
+    numLabel.textContent = '已打 ' + count + ' 下';
+  }
+
+  function spawnStamp(x,y){
+    const s = document.createElement('div');
+    s.className = 'stamp';
+    s.textContent = '打';
+    s.style.left = x+'px';
+    s.style.top = y+'px';
+    s.style.animation = 'stampPop .7s ease forwards';
+    stage.appendChild(s);
+    setTimeout(()=>s.remove(), 750);
+  }
+
+  function spawnFloatText(x,y){
+    const t = document.createElement('div');
+    t.className = 'float-text';
+    t.textContent = phrases[Math.floor(Math.random()*phrases.length)];
+    t.style.left = x+'px';
+    t.style.top = (y-10)+'px';
+    t.style.animation = 'floatUp 1s ease-out forwards';
+    stage.appendChild(t);
+    setTimeout(()=>t.remove(), 1050);
+  }
+
+  function spawnSparks(x,y,n){
+    const colors = ['#ffcf5c','#ff8a3d','#ffe9a8','#c94433'];
+    for(let i=0;i<n;i++){
+      const p = document.createElement('div');
+      p.className='spark';
+      const size = 3+Math.random()*4;
+      p.style.width=size+'px'; p.style.height=size+'px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.left = x+'px'; p.style.top = y+'px';
+      const angle = Math.random()*Math.PI*2;
+      const dist = 24+Math.random()*46;
+      const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
+      stage.appendChild(p);
+      p.animate([
+        {transform:'translate(0,0)', opacity:1},
+        {transform:`translate(${dx}px, ${dy}px)`, opacity:0}
+      ], {duration:500+Math.random()*300, easing:'cubic-bezier(.2,.8,.3,1)'});
+      setTimeout(()=>p.remove(), 850);
+    }
+  }
+
+  function spawnScraps(n){
+    const rect = doll.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    const cx = rect.left - stageRect.left + rect.width/2;
+    const cy = rect.top - stageRect.top + rect.height/2;
+    for(let i=0;i<n;i++){
+      const p = document.createElement('div');
+      p.className='scrap';
+      const w = 6+Math.random()*8, h=6+Math.random()*8;
+      p.style.width=w+'px'; p.style.height=h+'px';
+      p.style.background = Math.random()>.5 ? 'var(--paper)' : 'var(--red)';
+      p.style.left = cx+'px'; p.style.top = cy+'px';
+      const angle = Math.random()*Math.PI*2;
+      const dist = 60+Math.random()*120;
+      const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist - 40;
+      const rot = Math.random()*720-360;
+      stage.appendChild(p);
+      p.animate([
+        {transform:'translate(0,0) rotate(0deg)', opacity:1},
+        {transform:`translate(${dx}px, ${dy+140}px) rotate(${rot}deg)`, opacity:0}
+      ], {duration:900+Math.random()*400, easing:'cubic-bezier(.2,.7,.3,1)'});
+      setTimeout(()=>p.remove(), 1350);
+    }
+  }
+
+  function swingSlipper(targetX, targetY){
+    const slipper = document.createElement('div');
+    slipper.className = 'slipper';
+    slipper.innerHTML = '<svg viewBox="0 0 60 90"><path d="M30 4 C12 4 6 22 8 40 C10 58 4 70 10 84 L50 84 C56 70 50 58 52 40 C54 22 48 4 30 4 Z" fill="#a8352a" stroke="#5c1c14" stroke-width="3"/><ellipse cx="30" cy="24" rx="14" ry="8" fill="#7a2119" opacity=".5"/></svg>';
+    const startX = targetX + (Math.random()*60-30);
+    slipper.style.left = startX+'px';
+    slipper.style.top = '-70px';
+    stage.appendChild(slipper);
+
+    const anim = slipper.animate([
+      { transform:'translate(0,0) rotate(-25deg)', offset:0 },
+      { transform:`translate(${targetX-startX}px, ${targetY+40}px) rotate(18deg)`, offset:.62 },
+      { transform:`translate(${targetX-startX-10}px, ${targetY+30}px) rotate(30deg)`, offset:.72 },
+      { transform:`translate(${targetX-startX+40}px, ${targetY-160}px) rotate(-60deg)`, offset:1 }
+    ], { duration:520, easing:'cubic-bezier(.5,0,.7,.4)' });
+
+    setTimeout(()=>{ impact(targetX, targetY); }, 520*0.6);
+    anim.onfinish = ()=> slipper.remove();
+  }
+
+  function impact(x,y){
+    playWhack();
+    spawnStamp(x,y);
+    spawnFloatText(x,y);
+    spawnSparks(x,y,10);
+
+    doll.classList.remove('squash'); void doll.offsetWidth; doll.classList.add('squash');
+    dollPivot.classList.add('hit');
+    stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+    setTimeout(()=>{ dollPivot.classList.remove('hit'); }, 500);
+
+    count++;
+    cycleCount++;
+    updateTally();
+
+    if(cycleCount % 50 === 0){
+      milestoneText.innerHTML = '小人魂飞魄散！<br><span style="font-size:1rem;opacity:.85">新的仇人已就位</span>';
+      milestone.classList.remove('show'); void milestone.offsetWidth; milestone.classList.add('show');
+      spawnScraps(26);
+      playChime();
+      cracks.style.opacity = 0;
+    } else {
+      cracks.style.opacity = Math.min(.85, (cycleCount % 50)/50 * 1.1);
+    }
+  }
+
+  stage.addEventListener('pointerup', function(e){
+    if (e.button !== undefined && e.button !== 0) return;
+    const rect = stage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    swingSlipper(x,y);
+  });
+
+  resetBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    count = 0; cycleCount = 0;
+    cracks.style.opacity = 0;
+    updateTally();
+  });
+
+  uploadBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function(){
+    const file = this.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      dollHead.innerHTML = '<img src="'+ev.target.result+'" alt="仇人照片">';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  updateTally();
+})();
+</script>
+
+<script>
+(function () {
+  const chants = [
+    "打你个小人头，打到你有气无碇唞",
+    "打你个小人手，打到你有钱唔识收",
+    "打你个小人脚，打到你有鞋唔识着",
+    "打你个小人眼，打到你成世都撞板",
+    "打你个小人口，打到你食亲饭都呕"
+  ];
+  let chantIndex = 0;
+
+  function hitSound() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(125, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(55, ctx.currentTime + 0.11);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime + 0.006);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+      setTimeout(() => ctx.close(), 220);
+    } catch (_) {}
+  }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "zh-HK";
+    u.rate = 0.86;
+    u.pitch = 0.82;
+    u.volume = 1;
+    const voices = speechSynthesis.getVoices();
+    u.voice =
+      voices.find(v => /^zh-HK/i.test(v.lang)) ||
+      voices.find(v => /^zh-TW/i.test(v.lang)) ||
+      voices.find(v => /^zh/i.test(v.lang)) ||
+      null;
+    speechSynthesis.speak(u);
+  }
+
+  // Hook the existing strike function without changing its UI or animation code.
+  const originalHit = window.hit;
+  if (typeof originalHit === "function") {
+    window.hit = function () {
+      hitSound();
+      speak(chants[chantIndex % chants.length]);
+      chantIndex++;
+      return originalHit.apply(this, arguments);
+    };
+  }
+
+  // If the original file uses another strike handler, delegate through the existing
+  // click listeners by adding a capture listener on the stage.
+  const stage = document.getElementById("stage");
+  if (stage && typeof originalHit !== "function") {
+    stage.addEventListener("click", function () {
+      hitSound();
+      speak(chants[chantIndex % chants.length]);
+      chantIndex++;
+    }, true);
+  }
+})();
+</script>
+
+</body>
+</html>
