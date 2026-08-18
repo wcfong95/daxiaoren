@@ -658,8 +658,6 @@
     const voices = speechSynthesis.getVoices();
     u.voice =
       voices.find(v => /^zh-HK/i.test(v.lang)) ||
-      voices.find(v => /^zh-TW/i.test(v.lang)) ||
-      voices.find(v => /^zh/i.test(v.lang)) ||
       null;
     speechSynthesis.speak(u);
   }
